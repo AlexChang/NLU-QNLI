@@ -23,6 +23,8 @@ import logging
 import os
 import random
 import sys
+import math
+from zipfile import ZipFile
 
 import numpy as np
 import torch
@@ -39,7 +41,6 @@ from pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE, WE
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertConfig
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.optimization import BertAdam, WarmupLinearSchedule
-
 logger = logging.getLogger(__name__)
 
 
@@ -318,6 +319,11 @@ class QnliProcessor(DataProcessor):
             self._read_tsv(os.path.join(data_dir, "dev.tsv")),
             "dev_matched")
 
+    def get_test_examples(self, data_dir):
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test.tsv")),
+            "test")
+
     def get_labels(self):
         """See base class."""
         return ["entailment", "not_entailment"]
@@ -331,7 +337,10 @@ class QnliProcessor(DataProcessor):
             guid = "%s-%s" % (set_type, line[0])
             text_a = line[1]
             text_b = line[2]
-            label = line[-1]
+            if set_type == "test":
+                label = "entailment"
+            else:
+                label = line[-1]
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
@@ -601,6 +610,9 @@ def main():
     parser.add_argument("--do_eval",
                         action='store_true',
                         help="Whether to run eval on the dev set.")
+    parser.add_argument("--do_test",
+                        action='store_true',
+                        help="Whether to run test on the test set.")
     parser.add_argument("--do_lower_case",
                         action='store_true',
                         help="Set this flag if you are using an uncased model.")
@@ -713,8 +725,8 @@ def main():
     if n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-    if not args.do_train and not args.do_eval:
-        raise ValueError("At least one of `do_train` or `do_eval` must be True.")
+    if not args.do_train and not args.do_eval and not args.do_test:
+        raise ValueError("At least one of `do_train` or `do_eval` or `do_test` must be True.")
 
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train:
         raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
@@ -732,23 +744,34 @@ def main():
     label_list = processor.get_labels()
     num_labels = len(label_list)
 
-    tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
+    vocab_file_path = '{}/bert-large-uncased-vocab.txt'.format(args.cache_dir)
+    tokenizer = BertTokenizer.from_pretrained(vocab_file_path, do_lower_case=args.do_lower_case)
+    # tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
 
     train_examples = None
     num_train_optimization_steps = None
     if args.do_train:
         train_examples = processor.get_train_examples(args.data_dir)
+        # num_train_optimization_steps = int(
+        #     len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps) * args.num_train_epochs
         num_train_optimization_steps = int(
-            len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps) * args.num_train_epochs
+            math.ceil(len(train_examples) / args.train_batch_size) / args.gradient_accumulation_steps) * \
+                                       args.num_train_epochs
         if args.local_rank != -1:
             num_train_optimization_steps = num_train_optimization_steps // torch.distributed.get_world_size()
 
     # Prepare model
     cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE),
                                                                    'distributed_{}'.format(args.local_rank))
-    model = BertForSequenceClassification.from_pretrained(args.bert_model,
+    model_file_path = '{}/{}.tar.gz'.format(args.cache_dir, args.bert_model)
+    # model_file_path = '{}'.format(args.output_dir)
+    model = BertForSequenceClassification.from_pretrained(model_file_path,
                                                           cache_dir=cache_dir,
                                                           num_labels=num_labels)
+    # model = BertForSequenceClassification.from_pretrained(args.bert_model,
+    #                                                       cache_dir=cache_dir,
+    #                                                       num_labels=num_labels)
+
     if args.fp16:
         model.half()
     model.to(device)
@@ -879,10 +902,10 @@ def main():
         # Load a trained model and vocabulary that you have fine-tuned
         model = BertForSequenceClassification.from_pretrained(args.output_dir, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(args.output_dir, do_lower_case=args.do_lower_case)
-    else:
-        model = BertForSequenceClassification.from_pretrained(args.bert_model,
-                                                              cache_dir=cache_dir,
-                                                              num_labels=num_labels)
+    # else:
+    #     model = BertForSequenceClassification.from_pretrained(model_file_path,
+    #                                                           cache_dir=cache_dir,
+    #                                                           num_labels=num_labels)
     model.to(device)
 
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
@@ -1024,6 +1047,111 @@ def main():
                     logger.info("  %s = %s", key, str(result[key]))
                     writer.write("%s = %s\n" % (key, str(result[key])))
 
+    if args.do_test and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
+        eval_examples = processor.get_test_examples(args.data_dir)
+        eval_features = convert_examples_to_features(
+            eval_examples, label_list, args.max_seq_length, tokenizer, output_mode)
+        logger.info("***** Running Test *****")
+        logger.info("  Num examples = %d", len(eval_examples))
+        logger.info("  Batch size = %d", args.eval_batch_size)
+        all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+        all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+
+        if output_mode == "classification":
+            all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+        elif output_mode == "regression":
+            all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.float)
+
+        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+        # Run prediction for full data
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
+
+        model.eval()
+        eval_loss = 0
+        nb_eval_steps = 0
+        preds = []
+
+        for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Predicting"):
+            input_ids = input_ids.to(device)
+            input_mask = input_mask.to(device)
+            segment_ids = segment_ids.to(device)
+            label_ids = label_ids.to(device)
+
+            with torch.no_grad():
+                logits = model(input_ids, segment_ids, input_mask, labels=None)
+
+            # create eval loss and other metric required by the task
+            if output_mode == "classification":
+                loss_fct = CrossEntropyLoss()
+                tmp_eval_loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
+            elif output_mode == "regression":
+                loss_fct = MSELoss()
+                tmp_eval_loss = loss_fct(logits.view(-1), label_ids.view(-1))
+
+            eval_loss += tmp_eval_loss.mean().item()
+            nb_eval_steps += 1
+            if len(preds) == 0:
+                preds.append(logits.detach().cpu().numpy())
+            else:
+                preds[0] = np.append(
+                    preds[0], logits.detach().cpu().numpy(), axis=0)
+
+        eval_loss = eval_loss / nb_eval_steps
+        preds = preds[0]
+        if output_mode == "classification":
+            preds = np.argmax(preds, axis=1)
+        elif output_mode == "regression":
+            preds = np.squeeze(preds)
+        result = compute_metrics(task_name, preds, all_label_ids.numpy())
+        loss = tr_loss / global_step if args.do_train else None
+
+        pred_output = convert(preds)
+
+        predict_output_file = os.path.join(args.output_dir, "predict_results.txt")
+        with open(predict_output_file, "w") as writer:
+            writer.writelines(pred_output)
+
+        # result['eval_loss'] = eval_loss
+        # result['global_step'] = global_step
+        # result['loss'] = loss
+        #
+        # output_eval_file = os.path.join(args.output_dir, "eval_results.txt")
+        # with open(output_eval_file, "w") as writer:
+        #     logger.info("***** Eval results *****")
+        #     for key in sorted(result.keys()):
+        #         logger.info("  %s = %s", key, str(result[key]))
+        #         writer.write("%s = %s\n" % (key, str(result[key])))
+
+
+def convert(preds):
+    title = 'index\tprediction\n'
+    output = []
+    output.append(title)
+    for idx, pred in enumerate(preds):
+        line = str(idx) + '\t'
+        if pred == 0:
+            line += 'entailment'
+        else:
+            line += 'not_entailment'
+        line += '\n'
+        output.append(line)
+    return output
+
+
+def to_zip(submission_name='submission', output_path='./', sample_path='./cbow/'):
+    sample_file_names = os.listdir(sample_path)
+    if 'QNLI.tsv' in sample_file_names:
+        sample_file_names.remove('QNLI.tsv')
+
+    submission_file_name = submission_name
+    if not submission_name.endswith('.zip'):
+        submission_file_name += '.zip'
+    with ZipFile(submission_file_name, 'w') as myzip:
+        for sample_file_name in sample_file_names:
+            myzip.write(os.path.join(sample_path, sample_file_name))
+        myzip.write(os.path.join(output_path, 'QNLI.tsv'))
 
 if __name__ == "__main__":
     main()

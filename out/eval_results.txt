@@ -1,4 +1,0 @@
-acc = 0.5279150649826103
-eval_loss = 0.8010572544564963
-global_step = 0
-loss = None
