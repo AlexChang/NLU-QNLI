@@ -3,7 +3,6 @@
 ## Linux
 
 python run_classifier.py \
-  --task_name=QNLI \
   --bert_model=base-uncased-qnli-1 \
   --do_lower_case \
   --do_test \
@@ -13,16 +12,16 @@ python run_classifier.py \
 
 
 python run_classifier.py \
-  --task_name=QNLI \
   --bert_model=bert-large-uncased \
   --do_lower_case \
   --do_train \
   --do_eval \
   --do_test \
+  --train_batch_size=24 \
   --num_train_epochs=5.0 \
-  --data_dir=./data/QNLI_r \
+  --data_dir=./data/QNLI \
   --cache_dir=./pytorch_pretrained_bert \
-  --output_dir=./out/qnli_3
+  --output_dir=./out/qnli_6
     
   
 ## Windows
