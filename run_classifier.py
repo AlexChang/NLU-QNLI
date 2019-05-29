@@ -571,7 +571,8 @@ def main():
 
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
             tr_loss = 0
-            nb_tr_examples, nb_tr_steps = 0, 0
+            nb_tr_examples = 0
+            # nb_tr_steps = 0
             for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
                 model.train()
                 batch = tuple(t.to(device) for t in batch)
