@@ -101,3 +101,4 @@ ENV/
 *.tsv
 *.zip
 pytorch_pretrained_bert/
+!/cbow/*.tsv
