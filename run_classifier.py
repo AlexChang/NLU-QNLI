@@ -212,8 +212,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
         if output_mode == "classification":
             label_id = label_map[example.label]
-        elif output_mode == "regression":
-            label_id = float(example.label)
         else:
             raise KeyError(output_mode)
 
@@ -440,10 +438,10 @@ def main():
     task_name = 'qnli'
     processor = QnliProcessor()
     output_mode = "classification"
-
     label_list = processor.get_labels()
     num_labels = len(label_list)
 
+    # tokenizer
     vocab_file_path = '{}/bert-large-uncased-vocab.txt'.format(args.cache_dir)
     tokenizer = BertTokenizer.from_pretrained(vocab_file_path, do_lower_case=args.do_lower_case)
     # tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
@@ -519,6 +517,9 @@ def main():
                                  warmup=args.warmup_proportion,
                                  t_total=num_train_optimization_steps)
 
+    #################################
+    # prepare eval result for train #
+    #################################
     # prepare evaluation
     eval_examples = processor.get_dev_examples(args.data_dir)
     eval_features = convert_examples_to_features(
@@ -532,20 +533,25 @@ def main():
 
     if output_mode == "classification":
         eval_all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-    elif output_mode == "regression":
-        eval_all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.float)
 
     eval_data = TensorDataset(eval_all_input_ids, eval_all_input_mask, eval_all_segment_ids, eval_all_label_ids)
     # Run prediction for full data
     eval_sampler = SequentialSampler(eval_data)
     eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
+    #########
+    # train #
+    #########
     # tensorboard
-    tensorboard_writer = SummaryWriter('./tblog/')
+    tb_log_path = os.path.join('./tblog/', args.output_dir.split('/')[-1])
+    if not os.path.exists(tb_log_path):
+        os.mkdir(tb_log_path)
+    tensorboard_writer = SummaryWriter(tb_log_path)
 
     global_step = 0
     nb_tr_steps = 0
     tr_loss = 0
+    best_eval_result = 0
     if args.do_train:
         train_features = convert_examples_to_features(
             train_examples, label_list, args.max_seq_length, tokenizer, output_mode)
@@ -559,8 +565,6 @@ def main():
 
         if output_mode == "classification":
             all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
-        elif output_mode == "regression":
-            all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.float)
 
         train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
         if args.local_rank == -1:
@@ -584,9 +588,6 @@ def main():
                 if output_mode == "classification":
                     loss_fct = CrossEntropyLoss()
                     loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
-                elif output_mode == "regression":
-                    loss_fct = MSELoss()
-                    loss = loss_fct(logits.view(-1), label_ids.view(-1))
 
                 if n_gpu > 1:
                     loss = loss.mean()  # mean() to average on multi-gpu.
@@ -616,35 +617,33 @@ def main():
                     tensorboard_writer.add_scalar('train_loss', loss.item(), nb_tr_steps)
                     if step % 1000 == 999:
                         eval_result = evaluate(args, device, model, eval_all_label_ids, eval_dataloader)
+                        if eval_result['acc'] > best_eval_result:
+                            best_eval_result = eval_result['acc']
+                            save_model_and_tokenizer(args, model, tokenizer)
                         tensorboard_writer.add_scalar('eval_acc', eval_result['acc'], nb_tr_steps)
                         tensorboard_writer.add_scalar('eval_loss', eval_result['eval_loss'], nb_tr_steps)
 
+    ##############
+    # save model #
+    ##############
     if args.do_train and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
-        # Save a trained model, configuration and tokenizer
-        model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+        save_model_and_tokenizer(args, model, tokenizer, best_path='')
 
-        # If we save using the predefined names, we can load using `from_pretrained`
-        output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME)
-        output_config_file = os.path.join(args.output_dir, CONFIG_NAME)
-
-        torch.save(model_to_save.state_dict(), output_model_file)
-        model_to_save.config.to_json_file(output_config_file)
-        tokenizer.save_vocabulary(args.output_dir)
-
-        # Load a trained model and vocabulary that you have fine-tuned
-        model = BertForSequenceClassification.from_pretrained(args.output_dir, num_labels=num_labels)
-        tokenizer = BertTokenizer.from_pretrained(args.output_dir, do_lower_case=args.do_lower_case)
-    # else:
-    #     model = BertForSequenceClassification.from_pretrained(model_file_path,
-    #                                                           cache_dir=cache_dir,
-    #                                                           num_labels=num_labels)
+    ############################
+    # load model for eval/test #
+    ############################
+    model, tokenizer = load_model_and_tokenizer(args)
     model.to(device)
 
-
-
+    ########
+    # eval #
+    ########
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         evaluate(args, device, model, eval_all_label_ids, eval_dataloader, output_to_file=True)
 
+    ########
+    # test #
+    ########
     # prepare test
     test_examples = processor.get_test_examples(args.data_dir)
     test_features = convert_examples_to_features(
@@ -658,8 +657,6 @@ def main():
 
     if output_mode == "classification":
         test_all_label_ids = torch.tensor([f.label_id for f in test_features], dtype=torch.long)
-    elif output_mode == "regression":
-        test_all_label_ids = torch.tensor([f.label_id for f in test_features], dtype=torch.float)
 
     test_data = TensorDataset(test_all_input_ids, test_all_input_mask, test_all_segment_ids, test_all_label_ids)
     # Run prediction for full data
@@ -747,6 +744,41 @@ def test(args, device, model, eval_dataloader):
     with open(predict_output_file, "w") as writer:
         writer.writelines(pred_output)
 
+    to_zip(args.output_dir)
+
+
+def save_model_and_tokenizer(args, model, tokenizer, best_path='best'):
+    # Save a trained model, configuration and tokenizer
+    model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+
+    # If we save using the predefined names, we can load using `from_pretrained`
+    if best_path:
+        best_output_path = os.path.join(args.output_dir, best_path)
+        if not os.path.exists(best_output_path):
+            os.mkdir(best_output_path)    
+        output_model_file = os.path.join(best_output_path, WEIGHTS_NAME)
+        output_config_file = os.path.join(best_output_path, CONFIG_NAME)
+    else:
+        output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME)
+        output_config_file = os.path.join(args.output_dir, CONFIG_NAME)
+
+    torch.save(model_to_save.state_dict(), output_model_file)
+    model_to_save.config.to_json_file(output_config_file)
+    tokenizer.save_vocabulary(args.output_dir)
+
+
+def load_model_and_tokenizer(args, best_path='best'): 
+    # Load a trained model and vocabulary that you have fine-tuned
+    if best_path and os.path.exists(os.path.join(args.output_dir, best_path)):
+        best_output_path = os.path.join(args.output_dir, best_path)
+        model = BertForSequenceClassification.from_pretrained(best_output_path, num_labels=2)
+        tokenizer = BertTokenizer.from_pretrained(best_output_path, do_lower_case=args.do_lower_case)
+    else:
+        model = BertForSequenceClassification.from_pretrained(args.output_dir, num_labels=2)
+        tokenizer = BertTokenizer.from_pretrained(args.output_dir, do_lower_case=args.do_lower_case)
+    return model, tokenizer
+
+
 def convert(preds):
     title = 'index\tprediction\n'
     output = []
@@ -762,15 +794,14 @@ def convert(preds):
     return output
 
 
-def to_zip(submission_name='submission', output_path='./', sample_path='./cbow/'):
+def to_zip(output_path, zip_file_name='submission', sample_path='./cbow/'):
     sample_file_names = os.listdir(sample_path)
     if 'QNLI.tsv' in sample_file_names:
         sample_file_names.remove('QNLI.tsv')
 
-    submission_file_name = submission_name
-    if not submission_name.endswith('.zip'):
-        submission_file_name += '.zip'
-    with ZipFile(submission_file_name, 'w') as myzip:
+    if not zip_file_name.endswith('.zip'):
+        zip_file_name += '.zip'
+    with ZipFile(os.path.join(output_path, zip_file_name), 'w') as myzip:
         for sample_file_name in sample_file_names:
             myzip.write(os.path.join(sample_path, sample_file_name))
         myzip.write(os.path.join(output_path, 'QNLI.tsv'))

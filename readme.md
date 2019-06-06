@@ -18,10 +18,10 @@ python run_classifier.py \
   --do_eval \
   --do_test \
   --train_batch_size=24 \
-  --num_train_epochs=3.0 \
+  --num_train_epochs=4.0 \
   --data_dir=./data/QNLI \
   --cache_dir=./pytorch_pretrained_bert \
-  --output_dir=./out/qnli_7
+  --output_dir=./out/qnli_8
     
   
 ## Windows
@@ -82,4 +82,15 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * large model
     * batch 24
     * epoch 3
+    * tensorboard result
+    
+* **structure mod**
+    * auto tensorboard log output dir
+    * save best model
+    * auto zip
+    
+* qnli_8(test)
+    * large model
+    * batch 24
+    * epoch 4
     * tensorboard result
