@@ -3,15 +3,6 @@
 ## Linux
 
 python run_classifier.py \
-  --bert_model=base-uncased-qnli-1 \
-  --do_lower_case \
-  --do_test \
-  --data_dir=./data/QNLI \
-  --cache_dir=./pytorch_pretrained_bert \
-  --output_dir=./out/qnli_1
-
-
-python run_classifier.py \
   --bert_model=bert-large-uncased \
   --do_lower_case \
   --do_train \
@@ -19,6 +10,7 @@ python run_classifier.py \
   --do_test \
   --train_batch_size=24 \
   --num_train_epochs=4.0 \
+  --warmup_proportion=0.075 \
   --data_dir=./data/QNLI \
   --cache_dir=./pytorch_pretrained_bert \
   --output_dir=./out/qnli_8
@@ -89,8 +81,9 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * save best model
     * auto zip
     
-* qnli_8(test)
+* qnli_8
     * large model
     * batch 24
     * epoch 4
+    * warmup_proportion 0.075
     * tensorboard result

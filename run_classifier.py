@@ -613,9 +613,9 @@ def main():
                     optimizer.zero_grad()
                     global_step += 1
 
-                if step % 100 == 99:
+                if nb_tr_steps % 100 == 99:
                     tensorboard_writer.add_scalar('train_loss', loss.item(), nb_tr_steps)
-                    if step % 1000 == 999:
+                    if nb_tr_steps % 1000 == 999:
                         eval_result = evaluate(args, device, model, eval_all_label_ids, eval_dataloader)
                         if eval_result['acc'] > best_eval_result:
                             best_eval_result = eval_result['acc']
@@ -758,13 +758,15 @@ def save_model_and_tokenizer(args, model, tokenizer, best_path='best'):
             os.mkdir(best_output_path)    
         output_model_file = os.path.join(best_output_path, WEIGHTS_NAME)
         output_config_file = os.path.join(best_output_path, CONFIG_NAME)
+        output_vocab_path = best_output_path
     else:
         output_model_file = os.path.join(args.output_dir, WEIGHTS_NAME)
         output_config_file = os.path.join(args.output_dir, CONFIG_NAME)
+        output_vocab_path = args.output_dir
 
     torch.save(model_to_save.state_dict(), output_model_file)
     model_to_save.config.to_json_file(output_config_file)
-    tokenizer.save_vocabulary(args.output_dir)
+    tokenizer.save_vocabulary(output_vocab_path)
 
 
 def load_model_and_tokenizer(args, best_path='best'): 
