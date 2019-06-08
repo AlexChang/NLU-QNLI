@@ -387,16 +387,7 @@ def main():
                         help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n"
                              "0 (default value): dynamic loss scaling.\n"
                              "Positive power of 2: static loss scaling value.\n")
-    parser.add_argument('--server_ip', type=str, default='', help="Can be used for distant debugging.")
-    parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
     args = parser.parse_args()
-
-    # if args.server_ip and args.server_port:
-    #     # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
-    #     import ptvsd
-    #     print("Waiting for debugger attach")
-    #     ptvsd.enable_attach(address=(args.server_ip, args.server_port), redirect_output=True)
-    #     ptvsd.wait_for_attach()
 
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
@@ -441,103 +432,90 @@ def main():
     label_list = processor.get_labels()
     num_labels = len(label_list)
 
-    # tokenizer
-    vocab_file_path = '{}/bert-large-uncased-vocab.txt'.format(args.cache_dir)
-    tokenizer = BertTokenizer.from_pretrained(vocab_file_path, do_lower_case=args.do_lower_case)
-    # tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
-
+    # calculate train steps
     train_examples = None
     num_train_optimization_steps = None
     if args.do_train:
         train_examples = processor.get_train_examples(args.data_dir)
-        # num_train_optimization_steps = int(
-        #     len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps) * args.num_train_epochs
         num_train_optimization_steps = int(
             math.ceil(len(train_examples) / args.train_batch_size) / args.gradient_accumulation_steps) * \
                                        args.num_train_epochs
         if args.local_rank != -1:
             num_train_optimization_steps = num_train_optimization_steps // torch.distributed.get_world_size()
 
-    # Prepare model
-    cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE),
-                                                                   'distributed_{}'.format(args.local_rank))
-    model_file_path = '{}/{}.tar.gz'.format(args.cache_dir, args.bert_model)
-    # model_file_path = '{}'.format(args.output_dir)
-    model = BertForSequenceClassification.from_pretrained(model_file_path,
-                                                          cache_dir=cache_dir,
-                                                          num_labels=num_labels)
-    # model = BertForSequenceClassification.from_pretrained(args.bert_model,
-    #                                                       cache_dir=cache_dir,
-    #                                                       num_labels=num_labels)
-
-    if args.fp16:
-        model.half()
-    model.to(device)
-    if args.local_rank != -1:
-        try:
-            from apex.parallel import DistributedDataParallel as DDP
-        except ImportError:
-            raise ImportError(
-                "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-
-        model = DDP(model)
-    elif n_gpu > 1:
-        model = torch.nn.DataParallel(model)
-
-    # Prepare optimizer
+    # Prepare (raw) model and tokenizer (for train)
     if args.do_train:
-        param_optimizer = list(model.named_parameters())
-        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        ]
+        model, tokenizer = load_raw_model_and_tokenizer(args)
+
         if args.fp16:
+            model.half()
+        model.to(device)
+        if args.local_rank != -1:
             try:
-                from apex.optimizers import FP16_Optimizer
-                from apex.optimizers import FusedAdam
+                from apex.parallel import DistributedDataParallel as DDP
             except ImportError:
                 raise ImportError(
                     "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
 
-            optimizer = FusedAdam(optimizer_grouped_parameters,
-                                  lr=args.learning_rate,
-                                  bias_correction=False,
-                                  max_grad_norm=1.0)
-            if args.loss_scale == 0:
-                optimizer = FP16_Optimizer(optimizer, dynamic_loss_scale=True)
-            else:
-                optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.loss_scale)
-            warmup_linear = WarmupLinearSchedule(warmup=args.warmup_proportion,
-                                                 t_total=num_train_optimization_steps)
+            model = DDP(model)
+        elif n_gpu > 1:
+            model = torch.nn.DataParallel(model)
 
-        else:
-            optimizer = BertAdam(optimizer_grouped_parameters,
-                                 lr=args.learning_rate,
-                                 warmup=args.warmup_proportion,
-                                 t_total=num_train_optimization_steps)
+        # Prepare optimizer
+        if args.do_train:
+            param_optimizer = list(model.named_parameters())
+            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+            optimizer_grouped_parameters = [
+                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            ]
+            if args.fp16:
+                try:
+                    from apex.optimizers import FP16_Optimizer
+                    from apex.optimizers import FusedAdam
+                except ImportError:
+                    raise ImportError(
+                        "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
+
+                optimizer = FusedAdam(optimizer_grouped_parameters,
+                                      lr=args.learning_rate,
+                                      bias_correction=False,
+                                      max_grad_norm=1.0)
+                if args.loss_scale == 0:
+                    optimizer = FP16_Optimizer(optimizer, dynamic_loss_scale=True)
+                else:
+                    optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.loss_scale)
+                warmup_linear = WarmupLinearSchedule(warmup=args.warmup_proportion,
+                                                     t_total=num_train_optimization_steps)
+
+            else:
+                optimizer = BertAdam(optimizer_grouped_parameters,
+                                     lr=args.learning_rate,
+                                     warmup=args.warmup_proportion,
+                                     t_total=num_train_optimization_steps)
 
     #################################
     # prepare eval result for train #
     #################################
     # prepare evaluation
-    eval_examples = processor.get_dev_examples(args.data_dir)
-    eval_features = convert_examples_to_features(
-        eval_examples, label_list, args.max_seq_length, tokenizer, output_mode)
-    logger.info("***** Evaluation *****")
-    logger.info("  Num evaluation examples = %d", len(eval_examples))
-    logger.info("  Batch size = %d", args.eval_batch_size)
-    eval_all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    eval_all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    eval_all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+    if args.do_train or args.do_eval:
+        eval_examples = processor.get_dev_examples(args.data_dir)
+        eval_features = convert_examples_to_features(
+            eval_examples, label_list, args.max_seq_length, tokenizer, output_mode)
+        logger.info("***** Evaluation *****")
+        logger.info("  Num evaluation examples = %d", len(eval_examples))
+        logger.info("  Batch size = %d", args.eval_batch_size)
+        eval_all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+        eval_all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+        eval_all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
 
-    if output_mode == "classification":
-        eval_all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+        if output_mode == "classification":
+            eval_all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
 
-    eval_data = TensorDataset(eval_all_input_ids, eval_all_input_mask, eval_all_segment_ids, eval_all_label_ids)
-    # Run prediction for full data
-    eval_sampler = SequentialSampler(eval_data)
-    eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
+        eval_data = TensorDataset(eval_all_input_ids, eval_all_input_mask, eval_all_segment_ids, eval_all_label_ids)
+        # Run prediction for full data
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
     #########
     # train #
@@ -767,6 +745,14 @@ def save_model_and_tokenizer(args, model, tokenizer, best_path='best'):
     torch.save(model_to_save.state_dict(), output_model_file)
     model_to_save.config.to_json_file(output_config_file)
     tokenizer.save_vocabulary(output_vocab_path)
+
+
+def load_raw_model_and_tokenizer(args):
+    vocab_file_path = '{}/bert-large-uncased-vocab.txt'.format(args.cache_dir)
+    tokenizer = BertTokenizer.from_pretrained(vocab_file_path, do_lower_case=args.do_lower_case)
+    model_file_path = '{}/{}.tar.gz'.format(args.cache_dir, args.bert_model)
+    model = BertForSequenceClassification.from_pretrained(model_file_path, num_labels=2)
+    return model, tokenizer
 
 
 def load_model_and_tokenizer(args, best_path='best'): 
