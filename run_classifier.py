@@ -661,7 +661,7 @@ def main():
     test_data = TensorDataset(test_all_input_ids, test_all_input_mask, test_all_segment_ids, test_all_label_ids)
     # Run prediction for full data
     test_sampler = SequentialSampler(test_data)
-    test_dataloader = DataLoader(eval_data, sampler=test_sampler, batch_size=args.eval_batch_size)
+    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=args.eval_batch_size)
 
     if args.do_test and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         test(args, device, model, test_dataloader)
@@ -709,13 +709,13 @@ def evaluate(args, device, model, eval_all_label_ids, eval_dataloader, output_to
 
     return result
 
-def test(args, device, model, eval_dataloader):
+def test(args, device, model, test_dataloader):
     model.eval()
     eval_loss = 0
     nb_eval_steps = 0
     preds = []
 
-    for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Predicting"):
+    for input_ids, input_mask, segment_ids, label_ids in tqdm(test_dataloader, desc="Predicting"):
         input_ids = input_ids.to(device)
         input_mask = input_mask.to(device)
         segment_ids = segment_ids.to(device)
@@ -805,8 +805,8 @@ def to_zip(output_path, zip_file_name='submission', sample_path='./cbow/'):
         zip_file_name += '.zip'
     with ZipFile(os.path.join(output_path, zip_file_name), 'w') as myzip:
         for sample_file_name in sample_file_names:
-            myzip.write(os.path.join(sample_path, sample_file_name))
-        myzip.write(os.path.join(output_path, 'QNLI.tsv'))
+            myzip.write(os.path.join(sample_path, sample_file_name), sample_file_name)
+        myzip.write(os.path.join(output_path, 'QNLI.tsv'), 'QNLI.tsv')
 
 if __name__ == "__main__":
     main()
