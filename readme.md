@@ -75,6 +75,8 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * batch 24
     * epoch 3
     * tensorboard result
+    * dev eval 92.09%
+    * test 91.6%
     
 * **structure mod**
     * auto tensorboard log output dir
@@ -85,5 +87,17 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * large model
     * batch 24
     * epoch 4
-    * warmup_proportion 0.075
+    * **warmup_proportion 0.075**
+    * tensorboard result
+
+* **structure mod**
+    * test dataloader bug fix
+    * auto zip bug fix
+    * load model when necessary
+
+* qnli_9
+    * large model
+    * batch 32
+    * epoch 4
+    * **warmup_proportion 0.075**
     * tensorboard result
