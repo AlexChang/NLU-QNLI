@@ -9,11 +9,11 @@ python run_classifier.py \
   --do_eval \
   --do_test \
   --train_batch_size=32 \
-  --num_train_epochs=3.0 \
+  --num_train_epochs=5.0 \
   --warmup_proportion=0.1 \
   --data_dir=./data/QNLI \
   --cache_dir=./pytorch_pretrained_bert \
-  --output_dir=./out/qnli_11
+  --output_dir=./out/qnli_14
     
   
 ## Windows
@@ -95,6 +95,7 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * **warmup_proportion 0.075**
     * tensorboard result
     * dev eval 91.80%
+    * test 91.3%
 
 * **structure mod**
     * test dataloader bug fix
