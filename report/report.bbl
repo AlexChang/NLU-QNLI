@@ -21,11 +21,26 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
-\bibitem{scikit-learn}
-F.~Pedregosa, G.~Varoquaux, A.~Gramfort, V.~Michel, B.~Thirion, O.~Grisel,
-  M.~Blondel, P.~Prettenhofer, R.~Weiss, V.~Dubourg, J.~Vanderplas, A.~Passos,
-  D.~Cournapeau, M.~Brucher, M.~Perrot, and E.~Duchesnay, ``Scikit-learn:
-  Machine learning in python,'' \emph{Journal of Machine Learning Research},
-  vol.~12, pp. 2825--2830, 2011.
+\bibitem{vaswani2017attention}
+A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez,
+  {\L}.~Kaiser, and I.~Polosukhin, ``Attention is all you need,'' in
+  \emph{Advances in neural information processing systems}, 2017, pp.
+  5998--6008.
+
+\bibitem{dai2019transformer}
+Z.~Dai, Z.~Yang, Y.~Yang, W.~W. Cohen, J.~Carbonell, Q.~V. Le, and
+  R.~Salakhutdinov, ``Transformer-xl: Attentive language models beyond a
+  fixed-length context,'' \emph{arXiv preprint arXiv:1901.02860}, 2019.
+
+\bibitem{radford2018improving}
+A.~Radford, K.~Narasimhan, T.~Salimans, and I.~Sutskever, ``Improving language
+  understanding by generative pre-training,'' \emph{URL https://s3-us-west-2.
+  amazonaws. com/openai-assets/research-covers/languageunsupervised/language
+  understanding paper. pdf}, 2018.
+
+\bibitem{devlin2018bert}
+J.~Devlin, M.-W. Chang, K.~Lee, and K.~Toutanova, ``Bert: Pre-training of deep
+  bidirectional transformers for language understanding,'' \emph{arXiv preprint
+  arXiv:1810.04805}, 2018.
 
 \end{thebibliography}

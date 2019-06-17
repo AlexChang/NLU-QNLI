@@ -124,7 +124,7 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * epoch 3
     * tensorboard result
     * dev eval 
-    * test 
+    * test 91.9%
 
 * qnli_12
     * large model
@@ -133,4 +133,14 @@ python run_classifier.py --task_name=QNLI --bert_model=bert-base-uncased --do_lo
     * **warmup_proportion 0.075**
     * tensorboard result
     * dev eval 
-    * test 
+    * test 91.8%
+    
+* qnli_13(rerun qnli_2, torch 0.4.1)
+    * large model
+    * batch 32
+    * epoch 3
+    * dev eval 
+    * test 91.6%
+
+* merged_qnli_1(2,4,11,12)
+    * test 92.7%

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2019.4.13)  4 JUN 2019 13:54
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2019.4.13)  17 JUN 2019 17:11
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -324,37 +324,48 @@ Package grfext Info: Graphics extension search list:
  (c:/texlive/2018/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
-LaTeX Font Info:    Try loading font information for OT1+phv on input line 486.
+LaTeX Font Info:    Try loading font information for OT1+phv on input line 488.
  (c:/texlive/2018/texmf-dist/tex/latex/psnfss/ot1phv.fd
 File: ot1phv.fd 2001/06/04 scalable font definitions for OT1/phv.
 )
-LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <8.03> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 486.
-LaTeX Font Info:    Calculating math sizes for size <11.04124> on input line 486.
-LaTeX Font Info:    Try loading font information for U+pzd on input line 486.
+LaTeX Font Info:    Calculating math sizes for size <11.04124> on input line 488.
+LaTeX Font Info:    Try loading font information for U+pzd on input line 488.
  (c:/texlive/2018/texmf-dist/tex/latex/psnfss/upzd.fd
 File: upzd.fd 2001/06/04 font definitions for U/pzd.
 )
-LaTeX Font Info:    Calculating math sizes for size <8.03> on input line 486.
+LaTeX Font Info:    Calculating math sizes for size <8.03> on input line 488.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <11.04124> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 514.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 516.
 LaTeX Font Info:    Font shape `OT1/phv/bx/sc' in size <11.04124> not available
-(Font)              Font shape `OT1/phv/b/sc' tried instead on input line 514.
- (./report.bbl) [1{c:/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
+(Font)              Font shape `OT1/phv/b/sc' tried instead on input line 516.
+LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <9.53561> not available
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 522.
+LaTeX Font Info:    Calculating math sizes for size <9.53561> on input line 541.
+ (./report.bbl
+Underfull \hbox (badness 1845) in paragraph at lines 36--40
+[]\OT1/ppl/m/n/8.03 A. Rad-ford, K. Narasimhan, T. Sal-i-mans, and I. Sutskever,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--40
+\OT1/ppl/m/it/8.03 URL https://s3-us-west-2. ama-zon-aws. com/openai-assets/research-
+ []
+
+) [1{c:/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
 
 
 ] (./report.aux) ) 
 Here is how much of TeX's memory you used:
- 3679 strings out of 492616
- 55228 string characters out of 6132768
- 124924 words of memory out of 5000000
- 7521 multiletter control sequences out of 15000+600000
- 40067 words of font info for 90 fonts, out of 8000000 for 9000
+ 3697 strings out of 492616
+ 55591 string characters out of 6132768
+ 127971 words of memory out of 5000000
+ 7540 multiletter control sequences out of 15000+600000
+ 38761 words of font info for 90 fonts, out of 8000000 for 9000
  1144 hyphenation exceptions out of 8191
- 41i,5n,31p,307b,297s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 41i,5n,31p,414b,266s stack positions out of 5000i,500n,10000p,200000b,80000s
 {c:/texlive/2018/texmf-dist/fonts/enc/dvips/base/8r.enc}<c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on report.pdf (1 page, 64055 bytes).
+Output written on report.pdf (1 page, 69570 bytes).
 PDF statistics:
  33 PDF objects out of 1000 (max. 8388607)
  23 compressed objects within 1 object stream

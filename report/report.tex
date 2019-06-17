@@ -470,6 +470,7 @@
 % As a general rule, do not put math, special symbols or citations
 % in the abstract or keywords.
 
+\iffalse
 \IEEEtitleabstractindextext{%
 \begin{abstract}
   Abstract
@@ -479,6 +480,7 @@
 \begin{IEEEkeywords}
   Keywords
 \end{IEEEkeywords}}
+\fi
 
 
 
@@ -512,16 +514,34 @@
 
 
 \IEEEraisesectionheading{\section{Introduction}\label{sec:introduction}}
-Sample cite \cite{scikit-learn}.
 
 
-\section{Deisgn}
-\label{sec:design}
+\section{Background}
+\label{sec:background}
+
+\subsection{Transformer}
+\label{subsec:transformer}
+
+Transformer \cite{vaswani2017attention} \cite{dai2019transformer}
+
+\subsection{GPT}
+\label{subsec:gpt}
+
+GPT \cite{radford2018improving}
+
+\subsection{BERT}
+\label{subsec:bert}
+
+BERT \cite{devlin2018bert}
 
 
 \section{Implementation}
 \label{sec:implementation}
 
+Considering the limited gpu resources we have, it is almost impossible to retrain the bert model. So we completed this project based on the existing open source implementation and its pre-trained model. To be more specific, we use the PyTorch implementation provided by Hugging Face (\url{https://github.com/huggingface/pytorch-pretrained-BERT}).
+
+\section{Experimental Results}
+\label{sec:experimental_results}
 
 \section{Conclusion}
 \label{sec:conclusion}
