@@ -1,5 +1,7 @@
 torch
 torchvision
 pytorch-pretrained-bert
+scipy
+sklearn
 tb-nightly
 future
