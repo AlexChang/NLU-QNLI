@@ -27,11 +27,6 @@ A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez,
   \emph{Advances in neural information processing systems}, 2017, pp.
   5998--6008.
 
-\bibitem{dai2019transformer}
-Z.~Dai, Z.~Yang, Y.~Yang, W.~W. Cohen, J.~Carbonell, Q.~V. Le, and
-  R.~Salakhutdinov, ``Transformer-xl: Attentive language models beyond a
-  fixed-length context,'' \emph{arXiv preprint arXiv:1901.02860}, 2019.
-
 \bibitem{radford2018improving}
 A.~Radford, K.~Narasimhan, T.~Salimans, and I.~Sutskever, ``Improving language
   understanding by generative pre-training,'' \emph{URL https://s3-us-west-2.

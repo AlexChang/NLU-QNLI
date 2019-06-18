@@ -19,13 +19,23 @@ The following setup instructions are mainly for the Linux platform.
     pip install -r requirements.txt
     ```
 
-3. Select the corresponding PyTorch [installation](https://pytorch.org/get-started/locally/) command and execute it according to the Python version and CUDA version you have. For example, our experimental platform is Python 3.5.2 and CUDA 9.0.176 (Ubuntu16.04), so we can simply execute the following command
+3. Select the corresponding PyTorch [installation](https://pytorch.org/get-started/locally/) command and execute it 
+according to the Python version and CUDA version you have. For example, our experimental platform is Python 3.5.2 and
+ CUDA 9.0.176 (Ubuntu16.04), so we can simply execute the following command
 
     ```
     pip install torch
     ```
+    
+4. Place QNLI data files (dev.tsv, test.tsv, train.tsv) under directory ```./data/QNLI``` and **unzipped** sample 
+submission files under directory ```./cbow```. Download links are as follows:
 
-4. Place vocab file (in txt format) and pre-trained model file(in tar.gz format) under directory ```./pytorch_pretrained_bert```. Download links are as follows:
+    * QNLI data: https://gluebenchmark.com/tasks
+    * Sample submission: https://goo.gl/aYbxjR
+
+5. (Optional) Place vocab file (in txt format) and pre-trained model file(in tar.gz format) under directory ```
+./pytorch_pretrained_bert```. If you don't want to fine-tune a model, you can skip this step. Download links are as 
+follows:
 
     * For 'bert-base-uncased':
         * Model: https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased.tar.gz
@@ -35,7 +45,8 @@ The following setup instructions are mainly for the Linux platform.
         * Model: https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased.tar.gz
         * Vocab: https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased-vocab.txt
         
-5. Place vocab file (in txt format) and fine-tuned model files(```config.json``` and ```pytorch_model.bin```) under directory ```./out/qnli```. Download links are as follows:
+6. Place vocab file (in txt format) and fine-tuned model files(```config.json``` and ```pytorch_model.bin```) under 
+directory ```./out/qnli```. Download links are as follows:
     
     * For submission 'qnli_4' (**large** model):
         * Model & Vocab: https://pan.baidu.com/s/152OXQ1jQeWdS5C7xjMBYEQ
@@ -49,7 +60,8 @@ The following setup instructions are mainly for the Linux platform.
         * Model & Vocab: https://pan.baidu.com/s/1v0mCJqAghQ5p813BH6LwGQ 
         * Extraction code: dm76 
     
-6. Run the following command to evaluate the **large** fine-tuned model. To get the prediction result of the test set, replace ```--do_eval``` with ```--do_test```.
+7. Run the following command to evaluate the **large** fine-tuned model. To get the prediction result of the test 
+set, replace ```--do_eval``` with ```--do_test```.
 
     ```
     python run_classifier.py \
@@ -61,7 +73,7 @@ The following setup instructions are mainly for the Linux platform.
       --output_dir=./out/qnli
     ```
 
-7. Run the following command to fine tune a new **large** model.
+8. Run the following command to fine tune a new **large** model.
 
     ```
     python run_classifier.py \
@@ -70,14 +82,13 @@ The following setup instructions are mainly for the Linux platform.
       --do_train \
       --do_eval \
       --do_test \
+      --data_dir=./data/QNLI \
+      --cache_dir=./pytorch_pretrained_bert \
+      --output_dir=./out/qnli_15
+    ```
       --train_batch_size=32 \
       --num_train_epochs=3.0 \
       --warmup_proportion=0.1 \
-      --data_dir=./data/QNLI \
-      --cache_dir=./pytorch_pretrained_bert \
-      --output_dir=./out/qnli_new
-    ```
-
 
 ## Project structure
 
