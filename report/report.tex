@@ -540,8 +540,61 @@ BERT \cite{devlin2018bert}
 
 Considering the limited gpu resources we have, it is almost impossible to retrain the bert model. So we completed this project based on the existing open source implementation and its pre-trained model. To be more specific, we use the PyTorch implementation provided by Hugging Face (\url{https://github.com/huggingface/pytorch-pretrained-BERT}).
 
+Since we are solving QNLI, we used the example \emph{run\_classifier.py} it provided to solve the GLUE's MRPC tasks. In this file, it supports the training and evaluation of tasks cola, mnli, mnli-mm, mrpc, sst-2, sts-b, qqp, qnli, rte and wnli, but does not support test set prediction. Thus, we extended the data processor for the QNLI task and added the code for the test set prediction in the main function. In addition, for the sake of simplicity, we removed the code that is not related to the QNLI task and encapsulated the evaluation and testing into two separate functions. To visualize the training process, we introduced TensorBoard. At present, the stable version of PyTorch (1.1) provides the corresponding interface, but we need to install \emph{TensorBoard} with version 1.14 or higher and \emph{future} to run normally. At the time when we conducted the experiment, version 1.14 of TensorBoard was not released (the 1.14 version was released on 2019.6.15), so we used tb-nightly instead.
+
+As we will see in the next Section \ref{sec:experimental_results}, the highest prediction accuracy we can achieve is 92.1\% without any changes to the original training set. In order to improve the prediction accuracy, We have made the following two improvements. On the one hand, we integrate the training set and the development set together for the model training. The relevant implementation code is in the file \emph{merge\_data.py}. On the other hand, we carry out a simple model ensemble. We combine the predictions of several models, conduct unweighted voting, and select the majority of the votes to be the final prediction. The relevant implementation code is in the file \emph{merge\_result.py}.
+
 \section{Experimental Results}
 \label{sec:experimental_results}
+
+We ran all of our experiments on a server with Ubuntu 16.04 (64bit), 2 E5-2630 v4 processors, 128GB RAM and 4 TITAN XP graphics cards (12GB memroy per card). The main program we use and its version are as follows, Python 3.5.2, CUDA 9.0.176, NVIDIA driver 410.79 and PyTorch 1.1.0. Our experimental results are shown in Table \ref{tab:prediction_results}.
+
+As shown in Table \ref{tab:prediction_results}, our best performing single model achieved an accuracy of 92.2\% (as shown in Figure \ref{fig:best_single}). When training this model, we integrated the training set and the test set together. In order to further improve the prediction accuracy, we selected four models with relatively good performance. The submission names of the four models we selected are QNLI\_2, QNLI\_4, QNLI\_11 and QNLI\_12. We combine the predictions of these models, conduct unweighted voting, and select the majority of the votes to be the final prediction. The accuracy of the prediction results after this procedure reached 92.7\% (as shown in Figure \ref{fig:best_ensemble}).
+
+As we explained in the previous Section \ref{sec:implementation}, we introduced TensorBoard in the program to visualize the training process. Figure \ref{fig:eval_acc} $\sim$ \ref{fig:train_loss} shows the evaluation accuracy, evaluation loss and training loss during the training process, respectively. The smoothing coefficient in all these three figures is set to 0. During the training process, we record the loss every 100 steps and perform an evaluation every 1000 steps. If the current evaluation result is the best, we will save the current model in addition.
+
+In addition to the above results, we also found a very strange thing, when we do not change the batch size and warmup proportion, only adjust the epoch, the model has a certain chance to "get lost" in the training process. The final trained model will give exactly the same output when predicting, that is, both entailment or not\_entailment in our case. This is also why the submissions QNLI\_3, QNLI\_5, and QNLI\_6 are not listed in Table \ref{tab:prediction_results}. In order to solve this problem, we adjust the warmup proportion when the epoch is greater than 3. When epoch is 4, we set the warmup proportion to 0.075.
+
+Finally, we also tested the impact of different software versions on the experimental results. As the records whose submission names are QNLI\_8, QNLI\_13 and QNLI\_14 shown in Table \ref{tab:prediction_results}, even if the parameters are the same, the difference in the software version will lead to a gap in the experimental results.
+
+
+\begin{table}[!htbp]
+  \centering
+  \caption{Prediction Results} 
+  \label{tab:prediction_results}
+  \begin{tabular}{c|c|c}
+  \toprule
+  Submission Name & Parameter & Accuracy Rate\\
+  \midrule
+  QNLI\_1 & base\_b32\_e3 & 90.8\%\\
+  QNLI\_2 & large\_b32\_e3 & \textbf{92.1}\%\\
+  QNLI\_4 & large\_\textbf{train+dev}\_b32\_e3 & \textbf{92.2\%}\\
+  QNLI\_7 & large\_b24\_e3 & 91.6\%\\
+  QNLI\_8 & large\_b24\_e4\_wp0.075 & 91.3\%\\
+  QNLI\_9 & large\_b32\_e4\_wp0.075 & 91.9\%\\
+  QNLI\_10 & large\_b40\_e3 & 91.0\%\\
+  QNLI\_11 & large\_b32\_e3 & 91.9\%\\
+  QNLI\_12 & large\_b40\_e4\_wp0.075 & 91.8\%\\
+  QNLI\_13 & large\_\textbf{torch0.4.1}\_b32\_e3 & 91.6\%\\
+  QNLI\_14 & large\_\textbf{CUDA10}\_b32\_e3 & \%\\
+  QNLI\_ENSEMBLE\_1 & QNLI\_2+4+11+12 & \textbf{92.7\%}\\
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=1\linewidth]{images/best_ensemble}
+  \caption{Best Prediction Result(ensemble)}
+  \label{fig:best_ensemble}
+\end{figure}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=1\linewidth]{images/best_single}
+  \caption{Best Prediction Result(single)}
+  \label{fig:best_single}
+\end{figure}
 
 \begin{figure}[!t]
   \centering
@@ -562,20 +615,6 @@ Considering the limited gpu resources we have, it is almost impossible to retrai
   \includegraphics[width=1\linewidth]{images/train_loss}
   \caption{Train Loss}
   \label{fig:train_loss}
-\end{figure}
-
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=1\linewidth]{images/best_ensemble}
-  \caption{Best Prediction Result(ensemble)}
-  \label{fig:best_ensemble}
-\end{figure}
-
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=1\linewidth]{images/best_single}
-  \caption{Best Prediction Result(single)}
-  \label{fig:best_single}
 \end{figure}
 
 \section{Conclusion}

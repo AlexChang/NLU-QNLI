@@ -10,9 +10,9 @@ def main():
     train_tsv_file= codecs.open(os.path.join(origin_data_path, 'train.tsv'), 'r', encoding='utf-8')
     train_tsv = train_tsv_file.readlines()
     train_tsv_file.close()
-    print(train_tsv[-1])
+    # print(train_tsv[-1])
     last_id = int(train_tsv[-1].split('\t')[0])
-    print(last_id)
+    # print(last_id)
     print('train lines: {}'.format(len(train_tsv)))
 
     dev_tsv_file = codecs.open(os.path.join(origin_data_path, 'dev.tsv'), 'r', encoding='utf-8')

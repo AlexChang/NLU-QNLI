@@ -13,34 +13,37 @@ def to_zip(output_path, zip_file_name='submission', sample_path='./cbow/'):
             myzip.write(os.path.join(sample_path, sample_file_name), sample_file_name)
         myzip.write(os.path.join(output_path, 'QNLI.tsv'), 'QNLI.tsv')
 
-results = []
-for dirpath, dirnames, filenames in os.walk('./result'):
-    if filenames:
-        f = open(os.path.join(dirpath, filenames[0]), 'r')
-        result = f.readlines()
-        result = result[1:]
-        results.append(result)
+def main():
+    results = []
+    for dirpath, dirnames, filenames in os.walk('./result'):
+        if filenames:
+            f = open(os.path.join(dirpath, filenames[0]), 'r')
+            result = f.readlines()
+            result = result[1:]
+            results.append(result)
 
-new_result = ['index\tprediction\n']
-for line_idx in range(len(results[0])):
-    new_result_line = "{}\t".format(line_idx)
-    old_result_count = {}
-    for result in results:
-        old_result = result[line_idx].split('\t')[-1]
-        if old_result in old_result_count:
-            old_result_count[old_result] += 1
-        else:
-            old_result_count[old_result] = 1
-    old_result_sorted = sorted(old_result_count.items(), key=lambda x:x[1], reverse=True)
-    new_result_line += old_result_sorted[0][0]
-    new_result.append(new_result_line)
+    new_result = ['index\tprediction\n']
+    for line_idx in range(len(results[0])):
+        new_result_line = "{}\t".format(line_idx)
+        old_result_count = {}
+        for result in results:
+            old_result = result[line_idx].split('\t')[-1]
+            if old_result in old_result_count:
+                old_result_count[old_result] += 1
+            else:
+                old_result_count[old_result] = 1
+        old_result_sorted = sorted(old_result_count.items(), key=lambda x: x[1], reverse=True)
+        new_result_line += old_result_sorted[0][0]
+        new_result.append(new_result_line)
 
-merged_path = './merged'
-if not os.path.exists(merged_path):
-    os.mkdir(merged_path)
-predict_output_file = os.path.join(merged_path, "QNLI.tsv")
-with open(predict_output_file, "w") as writer:
-    writer.writelines(new_result)
+    merged_path = './merged'
+    if not os.path.exists(merged_path):
+        os.mkdir(merged_path)
+    predict_output_file = os.path.join(merged_path, "QNLI.tsv")
+    with open(predict_output_file, "w") as writer:
+        writer.writelines(new_result)
 
-to_zip(merged_path)
+    to_zip(merged_path)
 
+if __name__ == "__main__":
+    main()

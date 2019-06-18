@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.11.2)  17 JUN 2019 23:54
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.11.2)  18 JUN 2019 14:44
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -341,45 +341,48 @@ LaTeX Font Info:    Font shape `OT1/phv/bx/sc' in size <11.04124> not available
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <9.53561> not available
 (Font)              Font shape `OT1/phv/b/n' tried instead on input line 522.
 LaTeX Font Info:    Calculating math sizes for size <9.53561> on input line 541.
+ [1{c:/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
 
-pdfTeX warning: pdflatex.exe (file ./images/eval_acc.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<images/eval_acc.pdf, id=1, 963.6pt x 542.025pt>
-File: images/eval_acc.pdf Graphic file (type pdf)
-<use images/eval_acc.pdf>
-Package pdftex.def Info: images/eval_acc.pdf  used on input line 548.
-(pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
-
-
-pdfTeX warning: pdflatex.exe (file ./images/eval_loss.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<images/eval_loss.pdf, id=2, 963.6pt x 542.025pt>
-File: images/eval_loss.pdf Graphic file (type pdf)
-<use images/eval_loss.pdf>
-Package pdftex.def Info: images/eval_loss.pdf  used on input line 555.
-(pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
-
-
-pdfTeX warning: pdflatex.exe (file ./images/train_loss.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<images/train_loss.pdf, id=3, 963.6pt x 542.025pt>
-File: images/train_loss.pdf Graphic file (type pdf)
-<use images/train_loss.pdf>
-Package pdftex.def Info: images/train_loss.pdf  used on input line 562.
-(pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
-
+]
 
 pdfTeX warning: pdflatex.exe (file ./images/best_ensemble.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<images/best_ensemble.pdf, id=4, 963.6pt x 542.025pt>
+<images/best_ensemble.pdf, id=13, 963.6pt x 542.025pt>
 File: images/best_ensemble.pdf Graphic file (type pdf)
 <use images/best_ensemble.pdf>
-Package pdftex.def Info: images/best_ensemble.pdf  used on input line 569.
+Package pdftex.def Info: images/best_ensemble.pdf  used on input line 586.
 (pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
 
 
 pdfTeX warning: pdflatex.exe (file ./images/best_single.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<images/best_single.pdf, id=5, 963.6pt x 542.025pt>
+<images/best_single.pdf, id=14, 963.6pt x 542.025pt>
 File: images/best_single.pdf Graphic file (type pdf)
 <use images/best_single.pdf>
-Package pdftex.def Info: images/best_single.pdf  used on input line 576.
+Package pdftex.def Info: images/best_single.pdf  used on input line 593.
+(pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
+
+
+pdfTeX warning: pdflatex.exe (file ./images/eval_acc.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
+<images/eval_acc.pdf, id=15, 963.6pt x 542.025pt>
+File: images/eval_acc.pdf Graphic file (type pdf)
+<use images/eval_acc.pdf>
+Package pdftex.def Info: images/eval_acc.pdf  used on input line 600.
+(pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
+
+
+pdfTeX warning: pdflatex.exe (file ./images/eval_loss.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
+<images/eval_loss.pdf, id=16, 963.6pt x 542.025pt>
+File: images/eval_loss.pdf Graphic file (type pdf)
+<use images/eval_loss.pdf>
+Package pdftex.def Info: images/eval_loss.pdf  used on input line 607.
+(pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
+
+
+pdfTeX warning: pdflatex.exe (file ./images/train_loss.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
+<images/train_loss.pdf, id=17, 963.6pt x 542.025pt>
+File: images/train_loss.pdf Graphic file (type pdf)
+<use images/train_loss.pdf>
+Package pdftex.def Info: images/train_loss.pdf  used on input line 614.
 (pdftex.def)             Requested size: 252.94499pt x 142.27956pt.
 (./report.bbl
 Underfull \hbox (badness 1845) in paragraph at lines 36--40
@@ -391,25 +394,20 @@ Underfull \hbox (badness 10000) in paragraph at lines 36--40
 \OT1/ppl/m/it/8.03 URL https://s3-us-west-2. ama-zon-aws. com/openai-assets/research-
  []
 
-) [1{c:/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
-
-
- <./images/eval_acc.pdf> <./images/eval_loss.pdf> <./images/train_loss.pdf>] [2
-
- <./images/best_ensemble.pdf> <./images/best_single.pdf>] (./report.aux) ) 
+) [2 <./images/best_ensemble.pdf> <./images/best_single.pdf> <./images/eval_acc.pdf> <./images/eval_loss.pdf> <./images/train_loss.pdf>] (./report.aux) ) 
 Here is how much of TeX's memory you used:
- 3731 strings out of 492639
- 56429 string characters out of 6133088
- 126551 words of memory out of 5000000
- 7544 multiletter control sequences out of 15000+600000
- 40521 words of font info for 92 fonts, out of 8000000 for 9000
+ 3736 strings out of 492639
+ 56498 string characters out of 6133088
+ 132559 words of memory out of 5000000
+ 7547 multiletter control sequences out of 15000+600000
+ 41786 words of font info for 94 fonts, out of 8000000 for 9000
  1144 hyphenation exceptions out of 8191
- 41i,5n,31p,415b,266s stack positions out of 5000i,500n,10000p,200000b,80000s
-{c:/texlive/2018/texmf-dist/fonts/enc/dvips/base/8r.enc}<c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on report.pdf (2 pages, 441969 bytes).
+ 41i,8n,31p,1072b,266s stack positions out of 5000i,500n,10000p,200000b,80000s
+{c:/texlive/2018/texmf-dist/fonts/enc/dvips/base/8r.enc}<c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb><c:/texlive/2018/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
+Output written on report.pdf (2 pages, 468674 bytes).
 PDF statistics:
- 66 PDF objects out of 1000 (max. 8388607)
- 39 compressed objects within 1 object stream
+ 74 PDF objects out of 1000 (max. 8388607)
+ 45 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  26 words of extra memory for PDF output out of 10000 (max. 10000000)
 
