@@ -123,7 +123,7 @@
 
 * qnli_ensemble_1(2,4,11,12)
     * test 92.7%
-    
+
 * qnli_14
     * large model
     * batch 32
@@ -131,3 +131,11 @@
     * tensorboard result
     * dev eval 91.81%
     * test 91.4%
+
+* qnli_15(rerun qnli_2, CUDA10)
+    * large model
+    * batch 32
+    * epoch 3
+    * tensorboard result
+    * dev eval 91.54%
+    * test 91.9%

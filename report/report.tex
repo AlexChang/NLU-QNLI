@@ -515,37 +515,68 @@
 
 \IEEEraisesectionheading{\section{Introduction}\label{sec:introduction}}
 
-The remainder of this report is organized as follows. In Section \ref{sec:background}, we introduce the background knowledge of this project, mainly including Transformer, GPT and BERT. Then, the implementation is described in detail in Section \ref{sec:implementation}. The experimental results are described in Section \ref{sec:experimental_results}. Finally we conclude the report in Section \ref{sec:conclusion}.
+In the past few years, the concept of artificial intelligence (AI) has received extensive attention under the influence of Alpha Go \cite{silver2016mastering} \cite{silver2017mastering}. Natural language processing (NLP) and computer vision (CV), as the two pillars of AI, have also developed rapidly in recent years.
+
+Taking NLP as an example, word vectors have been the core representation technique of natural language processing for a long time. Word embedding for preprocessing a large amount of unmarked data by algorithms such as word2vec \cite{mikolov2013efficient} and GloVe \cite{pennington2014glove} is used to initialize the first layer of the neural network, and other layers are then trained on the data of specific tasks. However, word2vec and other related methods sacrifice expression for efficiency.
+
+The recent rise of the pre-trained language representations partially relieved this problem. This method is mainly divided into two categories, feature-based and fine-tuning. Embeddings from language models (ELMo) \cite{peters2018deep}, as one of feature-based approach, uses tasks-specific architecture, which takes pre-trained representations as extra features. While in generative pre-training (GPT) \cite{radford2018improving}, as a representative of the fine-tuning approach, only a small number of additional parameters are introduced, and the pre-trained parameters can be fine-tuned simultaneously during the training process.
+
+In this project, we are supposed to solve the question natural language inference (QNLI) task in the General Language Understanding Evaluation (GLUE) \cite{wang2018glue} benchmark. The QNLI task in GLUE is derived from the Stanford Question Answering Dataset (SQuAD) \cite{rajpurkar2016squad}. SQuAD is converted into a sentence pair classification task by forming a pair between a question and each sentence in the corresponding context. Thus the QNLI task is to determine whether the context sentence contains the answer to the question. SQuAD 2.0 \cite{rajpurkar2018know} was released in 2018, and accordingly, the QNLI data set currently used by GLUE benchmark was also upgraded.
+
+At the time when this project was released, the methods that ranked higher than GLUE baselines on the leaderboard all used the multi-layer bidirectional Transformer encoder (BERT) \cite{devlin2018bert} method. So we decided to follow BERT at the very beginning. However, as of today (2019.6.20), the Multi-Task Deep Neural Networks for Natural Language Understanding (MT-DNN) \cite{liu2019multi} \cite{liu2019improving} and XLNet \cite{yang2019xlnet} methods have surpassed the BERT method, respectively, ranking first and second on the leaderboard.
+
+The remainder of this report is organized as follows. In Section \ref{sec:background}, we introduce the background knowledge of this project, mainly including Transformer, GPT, and BERT. Then, the implementation is described in detail in Section \ref{sec:implementation}. The experimental results are described in Section \ref{sec:experimental_results}. Finally we conclude the report in Section \ref{sec:conclusion}.
 
 \section{Background}
 \label{sec:background}
 
+In this section, we will briefly introduce the BERT model used in this project and the background knowledge of Transformer and GPT, which are closely related to it.
+
 \subsection{Transformer}
 \label{subsec:transformer}
 
-Transformer \cite{vaswani2017attention}
+In the field of natural language processing, recurrent neural networks such as long short-term memory \cite{hochreiter1997long} and gated recurrent neural networks \cite{chung2014empirical} have dominated the state of art approaches for a long time. Among these methods, the encoder-decoder architecture and attention mechanism are also essential. However, Vaswani et al. \cite{vaswani2017attention} proposed a simple network architecture, the Transformer, which solely based on attention mechanisms and greatly improved the best results at the time.
+
+The architecture of the Transformer is shown in Figure \ref{fig:transformer_architecture}. It mainly follows the encoder-decoder architecture and uses stacked self-attention and point-wise, fully connected layers. The encoder is composed of a stack of identical layers. Each layer has two sub-layers. The first is a multi-head self-attention mechanism, and the second is a simple, position-wise fully connected feed-forward network. As for the decoder, it is also composed of a stack of identical layers. In addition to the two sub-layers in each encoder layer, the decoder inserts a third sub-layer, which performs multi-head attention over the output of the encoder stack.
+
+As we have mentioned in the previous paragraph, the Transformer uses a multi-head self-attention mechanism. In such a mechanism, it concat and project the outputs which yield by performing scaled dot-product attention function (in parallel) on the projected queries, keys, and values. As for the scaled dot-product attention function, it computes the dot products of the query with all keys and applies a softmax function to the weights on the values. The above two methods are shown in Figure \ref{fig:transformer_attention}.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=1\linewidth]{images/transformer_architecture.png}
-  \caption{The Transformer - model architecture}
+  \caption{Transformer Architecture}
   \label{fig:transformer_architecture}
+\end{figure}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=1\linewidth]{images/transformer_attention.png}
+  \caption{(left) Scaled Dot-Product Attention; (right) Multi-Head Attention}
+  \label{fig:transformer_attention}
 \end{figure}
 
 \subsection{GPT}
 \label{subsec:gpt}
 
-GPT \cite{radford2018improving}
+Considering the wide variety of tasks in natural language processing, Radford et al. \cite{radford2018improving} proposed the approach of generative pre-training of a language model, to solve the challenge for discriminatively trained models to perform adequately due to the lack of labeled corpus.
+
+In such a framework, it mainly consists of two stages. The first stage is the unsupervised pre-training. It learns a high-capacity language model, for which the authors use a multi-layer \emph{Transormer decoder} \cite{liu2018generating}, on a large corpus of text. Then in the following supervised fine-tuning stage, the final transformer block's activation is fed into an added linear output layer to predict the result.
+
+For those text classification tasks (such as QNLI in this project), we can directly fine-tune the model as described above. However, for some other tasks like question answering or textual entailment, some modifications like input transformation are required. Considering that this part of the content is not related to this project, we will not expand it in detail.
 
 \subsection{BERT}
 \label{subsec:bert}
 
-BERT \cite{devlin2018bert}
+Although GPT has made significant improvements in many NLP tasks, Devlin et al. \cite{devlin2018bert} argue that it severely restricts the power of the pre-trained representations since its language model is unidirectional, which means every token can only attend to previous tokens in the self-attention layers of the Transformer. Thus the authors proposed BERT: Bidirectional Encoder Representations from Transformers. 
 
+The architecture of BERT is a multi-layer bidirectional Transformer encoder based on the original implementation described in Vaswani et al. \cite{vaswani2017attention}. The input representation used in BERT is constructed by summing the corresponding token, segment, and position embeddings, as shown in Figure \ref{fig:bert_input_representation}. Besides, to addresses the previously mentioned unidirectional constraints, BERT is pre-trained using two novel unsupervised prediction tasks. The first one is the masked language model, and the second one is the next sentence prediction.
+
+As the authors have described in \cite{devlin2018bert}, BERT is designed to be very similar to GPT. The main difference between them is that BERT trains on larger corpora (BooksCorpus \& Wikipedia), learns sentence separators and embeddings during pre-training and trains for 1M steps with a batch size of 128, 000 words.
+ 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=1\linewidth]{images/bert_input_representation.png}
-  \caption{BERT input representation}
+  \caption{BERT Input Representation}
   \label{fig:bert_input_representation}
 \end{figure}
 
@@ -553,12 +584,12 @@ BERT \cite{devlin2018bert}
 \section{Implementation}
 \label{sec:implementation}
 
-Considering the limited gpu resources we have, it is almost impossible to retrain the bert model. So we completed this project based on the existing open source implementation and its pre-trained model. To be more specific, we use the PyTorch implementation provided by Hugging Face (\url{https://github.com/huggingface/pytorch-pretrained-BERT}).
+Considering the limited GPU resources we have, it is almost impossible to retrain the bert model. So we completed this project based on the existing open-source implementation and its pre-trained model. To be more specific, we use the PyTorch implementation provided by Hugging Face (\url{https://github.com/huggingface/pytorch-pretrained-BERT}).
 
-Since we are solving QNLI, we used the example \emph{run\_classifier.py} it provided to solve the GLUE's MRPC tasks. In this file, it supports the training and evaluation of tasks cola, mnli, mnli-mm, mrpc, sst-2, sts-b, qqp, qnli, rte and wnli, but does not support test set prediction. Thus, we extended the data processor for the QNLI task and added the code for the test set prediction in the main function. In addition, for the sake of simplicity, we removed the code that is not related to the QNLI task and encapsulated the evaluation and testing into two separate functions. 
+Since we are solving QNLI, we used the provided example \emph{run\_classifier.py} to solve the GLUE's MRPC tasks. In this file, it supports the training and evaluation of tasks cola, mnli, mnli-mm, mrpc, sst-2, sts-b, qqp, qnli, rte and wnli, but does not support test set prediction. Thus, we extended the data processor for the QNLI task and added the code for the test set prediction in the main function. In addition, for the sake of simplicity, we removed the code that is not related to the QNLI task and encapsulated the evaluation and testing into two separate functions. 
 
 
-Later, as we trained our model, we found that there is a problem in the original code to calculate the total number of training steps, which in turn will affect the learning rate adjustment. We corrected this error with reference to the following issue (\url{https://github.com/huggingface/pytorch-pretrained-BERT/issues/556}) on GitHub. However, this modification resulted in a slight decrease in the prediction accuracy of the fine-tuned model whose submission name is QNLI\_7 and later.
+Later, as we trained our model, we found that there is a problem in the original code to calculate the total number of training steps, which in turn will affect the learning rate adjustment. We corrected this error with reference to the following issue (\url{https://github.com/huggingface/pytorch-pretrained-BERT/issues/556}) on GitHub. However, this modification resulted in a slight decrease in the prediction accuracy of the fine-tuned model, whose submission name is QNLI\_7 and later.
 
 To visualize the training process, we introduced TensorBoard. At present, the stable version of PyTorch (1.1) provides the corresponding interface, but we need to install \emph{TensorBoard} with version 1.14 or higher and \emph{future} to run normally. At the time when we conducted the experiment, version 1.14 of TensorBoard was not released (the 1.14 version was released on 2019.6.15), so we used tb-nightly instead.
 
@@ -567,7 +598,7 @@ As we will see in the next Section \ref{sec:experimental_results}, the highest p
 \section{Experimental Results}
 \label{sec:experimental_results}
 
-\begin{table}[!htbp]
+\begin{table}[!bp]
   \centering
   \caption{Prediction Results} 
   \label{tab:prediction_results}
@@ -585,21 +616,21 @@ As we will see in the next Section \ref{sec:experimental_results}, the highest p
   QNLI\_11 & large\_b32\_e3 & 91.9\%\\
   QNLI\_12 & large\_b40\_e4\_wp0.075 & 91.8\%\\
   QNLI\_13 & large\_\textbf{torch0.4.1}\_b32\_e3 & 91.6\%\\
-  QNLI\_14 & large\_\textbf{CUDA10}\_b32\_e3 & \%\\
   QNLI\_ENSEMBLE\_1 & QNLI\_2+4+11+12 & \textbf{92.7\%}\\
+  QNLI\_ENSEMBLE\_2 & QNLI\_2+4+9+11+12+13 & \textbf{92.8\%}\\
   \bottomrule
   \end{tabular}
 \end{table}
 
-We ran all of our experiments on a server with Ubuntu 16.04 (64bit), 2 E5-2630 v4 processors, 128GB RAM and 4 TITAN XP graphics cards (12GB memroy per card). The main program we use and its version are as follows, Python 3.5.2, CUDA 9.0.176, NVIDIA driver 410.79 and PyTorch 1.1.0. Our experimental results are shown in Table \ref{tab:prediction_results}.
+We ran all of our experiments on a server with Ubuntu 16.04 (64bit), 2 E5-2630 v4 processors, 128GB RAM and 4 TITAN XP graphics cards (12GB memory per card). The programs we use and their versions are as follows, Python 3.5.2, CUDA 9.0.176, NVIDIA driver 410.79, and PyTorch 1.1.0. Our experimental results are shown in Table \ref{tab:prediction_results}.
 
-As shown in Table \ref{tab:prediction_results}, our best performing single model achieved an accuracy of 92.2\% (as shown in Figure \ref{fig:best_single}). When training this model, we integrated the training set and the test set together. In order to further improve the prediction accuracy, we selected four models with relatively good performance. The submission names of the four models we selected are QNLI\_2, QNLI\_4, QNLI\_11 and QNLI\_12. We combine the predictions of these models, conduct unweighted voting, and select the majority of the votes to be the final prediction. The accuracy of the prediction results after this procedure reached 92.7\% (as shown in Figure \ref{fig:best_ensemble}).
+As shown in Table \ref{tab:prediction_results}, our best performing single model achieved an accuracy of 92.2\% (as shown in Figure \ref{fig:best_single}). When training this model, we integrated the training set and the test set together. In order to further improve the prediction accuracy, we selected several models with relatively good performance and integrated their predictions. In submission QNLI\_ENSEMBLE\_1, we selected QNLI\_2, QNLI\_4, QNLI\_11, and QNLI\_12 in QNLI\_ENSEMBLE\_2, we selected QNLI\_2, QNLI\_4, QNLI\_9, QNLI\_11, QNLI\_12, and QNLI\_13. We combine the predictions of these models, conduct unweighted voting, and select the majority of the votes to be the final prediction. The accuracy of the prediction results after this procedure reached 92.8\% (as shown in Figure \ref{fig:best_ensemble}).
 
 As we explained in the previous Section \ref{sec:implementation}, we introduced TensorBoard in the program to visualize the training process. Figure \ref{fig:eval_acc} $\sim$ \ref{fig:train_loss} shows the evaluation accuracy, evaluation loss and training loss during the training process, respectively. The smoothing coefficient in all these three figures is set to 0. During the training process, we record the loss every 100 steps and perform an evaluation every 1000 steps. If the current evaluation result is the best, we will save the current model in addition.
 
 In addition to the above results, we also found a very strange thing, when we do not change the batch size and warmup proportion, only adjust the epoch, the model has a certain chance to "get lost" in the training process. The final trained model will give exactly the same output when predicting, that is, both entailment or not\_entailment in our case. This is also why the submissions QNLI\_3, QNLI\_5, and QNLI\_6 are not listed in Table \ref{tab:prediction_results}. In order to solve this problem, we adjust the warmup proportion when the epoch is greater than 3. When epoch is 4, we set the warmup proportion to 0.075.
 
-Finally, we also tested the impact of different software versions on the experimental results. As the records whose submission names are QNLI\_8, QNLI\_13 and QNLI\_14 shown in Table \ref{tab:prediction_results}, even if the parameters are the same, the difference in the software version will lead to a gap in the experimental results.
+Finally, we also tested the impact of different software versions on the experimental results. As the records whose submission names are QNLI\_8 and QNLI\_13 shown in Table \ref{tab:prediction_results}, even if the parameters are the same, the difference in the software version will lead to a gap in the experimental results.
 
 
 \begin{figure}[!t]
@@ -639,6 +670,8 @@ Finally, we also tested the impact of different software versions on the experim
 
 \section{Conclusion}
 \label{sec:conclusion}
+
+In this report, we first reviewed and briefly introduced BERT and some other related methods like Transformer and GPT. Next, in the experiment, we tried a variety of parameter combinations and improved our prediction accuracy by integrating data sets and model ensemble. Finally, we achieved a prediction accuracy of \textbf{92.8\%} on the GLUE QNLI task based on the BERT model in this project.
 
 
 % use section* for acknowledgment

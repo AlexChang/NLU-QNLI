@@ -93,3 +93,13 @@ set, replace ```--do_eval``` with ```--do_test```.
 ## Project structure
 
 * run_classifier.py
+
+    train, evaluate, predict the QNLI task
+
+* merge_data.py
+
+    merge train and dev set together
+
+* merge_result.py
+
+    merge several prediction results altogether
