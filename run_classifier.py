@@ -495,10 +495,9 @@ def main():
                                      t_total=num_train_optimization_steps)
 
     #################################
-    # prepare eval result for train #
+    # prepare eval data for train #
     #################################
-    # prepare evaluation
-    if args.do_train or args.do_eval:
+    if args.do_train:
         eval_examples = processor.get_dev_examples(args.data_dir)
         eval_features = convert_examples_to_features(
             eval_examples, label_list, args.max_seq_length, tokenizer, output_mode)
@@ -617,31 +616,50 @@ def main():
     # eval #
     ########
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
+        # prepare evaluation data
+        eval_examples = processor.get_dev_examples(args.data_dir)
+        eval_features = convert_examples_to_features(
+            eval_examples, label_list, args.max_seq_length, tokenizer, output_mode)
+        logger.info("***** Evaluation *****")
+        logger.info("  Num evaluation examples = %d", len(eval_examples))
+        logger.info("  Batch size = %d", args.eval_batch_size)
+        eval_all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+        eval_all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+        eval_all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+
+        if output_mode == "classification":
+            eval_all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+
+        eval_data = TensorDataset(eval_all_input_ids, eval_all_input_mask, eval_all_segment_ids, eval_all_label_ids)
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
+
+        # eval
         evaluate(args, device, model, eval_all_label_ids, eval_dataloader, output_to_file=True)
 
     ########
     # test #
     ########
-    # prepare test
-    test_examples = processor.get_test_examples(args.data_dir)
-    test_features = convert_examples_to_features(
-        test_examples, label_list, args.max_seq_length, tokenizer, output_mode)
-    logger.info("***** Running Test *****")
-    logger.info("  Num examples = %d", len(test_examples))
-    logger.info("  Batch size = %d", args.eval_batch_size)
-    test_all_input_ids = torch.tensor([f.input_ids for f in test_features], dtype=torch.long)
-    test_all_input_mask = torch.tensor([f.input_mask for f in test_features], dtype=torch.long)
-    test_all_segment_ids = torch.tensor([f.segment_ids for f in test_features], dtype=torch.long)
-
-    if output_mode == "classification":
-        test_all_label_ids = torch.tensor([f.label_id for f in test_features], dtype=torch.long)
-
-    test_data = TensorDataset(test_all_input_ids, test_all_input_mask, test_all_segment_ids, test_all_label_ids)
-    # Run prediction for full data
-    test_sampler = SequentialSampler(test_data)
-    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=args.eval_batch_size)
-
     if args.do_test and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
+        # prepare test data
+        test_examples = processor.get_test_examples(args.data_dir)
+        test_features = convert_examples_to_features(
+            test_examples, label_list, args.max_seq_length, tokenizer, output_mode)
+        logger.info("***** Running Test *****")
+        logger.info("  Num examples = %d", len(test_examples))
+        logger.info("  Batch size = %d", args.eval_batch_size)
+        test_all_input_ids = torch.tensor([f.input_ids for f in test_features], dtype=torch.long)
+        test_all_input_mask = torch.tensor([f.input_mask for f in test_features], dtype=torch.long)
+        test_all_segment_ids = torch.tensor([f.segment_ids for f in test_features], dtype=torch.long)
+
+        if output_mode == "classification":
+            test_all_label_ids = torch.tensor([f.label_id for f in test_features], dtype=torch.long)
+
+        test_data = TensorDataset(test_all_input_ids, test_all_input_mask, test_all_segment_ids, test_all_label_ids)
+        test_sampler = SequentialSampler(test_data)
+        test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=args.eval_batch_size)
+
+        # test
         test(args, device, model, test_dataloader)
 
 def evaluate(args, device, model, eval_all_label_ids, eval_dataloader, output_to_file=False):
